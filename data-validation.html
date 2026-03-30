@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Validation | Abdul Karim Khan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --card: #1a1a24;
+      --accent: #f97316;
+      --text: #f1f0ed;
+      --muted: #8a8a9a;
+      --green: #22c55e;
+      --red: #ef4444;
+      --border: rgba(249,115,22,0.15);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      display: inline-block;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.3);
+      color: var(--accent);
+      padding: 0.3rem 1rem;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 0.5rem; font-size: 0.95rem; }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.4rem;
+    }
+    .tab-btn {
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 0 60px rgba(249,115,22,0.05);
+    }
+
+    .form-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+    }
+    .form-subtitle {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+    .form-group label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0.8rem 2.8rem 0.8rem 1rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-wrap input:focus { border-color: var(--accent); }
+    .input-wrap input.valid { border-color: var(--green); }
+    .input-wrap input.invalid { border-color: var(--red); }
+    .input-icon {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+
+    .error-msg {
+      font-size: 0.78rem;
+      color: var(--red);
+      display: none;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .error-msg.show { display: flex; }
+    .success-msg {
+      font-size: 0.78rem;
+      color: var(--green);
+      display: none;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .success-msg.show { display: flex; }
+
+    .strength-bar {
+      display: none;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+    .strength-bar.show { display: flex; }
+    .strength-track {
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .strength-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s, background 0.3s;
+      width: 0%;
+    }
+    .strength-label { font-size: 0.75rem; color: var(--muted); }
+
+   
+    .req-list {
+      display: none;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .req-list.show { display: flex; }
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .req-item.met { color: var(--green); }
+    .req-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .req-item.met .req-dot { background: var(--green); }
+
+  
+    .toggle-pw {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: all 0.2s;
+      box-shadow: 0 0 30px rgba(249,115,22,0.2);
+    }
+    .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  
+    .success-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1rem;
+      padding: 1rem 0;
+    }
+    .success-icon {
+      width: 70px; height: 70px;
+      background: rgba(34,197,94,0.1);
+      border: 2px solid rgba(34,197,94,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .success-screen h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+    .success-screen p { color: var(--muted); font-size: 0.9rem; }
+    .reset-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 0.7rem 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      transition: border-color 0.2s;
+    }
+    .reset-btn:hover { border-color: var(--accent); }
+
+    
+    .info-box {
+      background: rgba(249,115,22,0.05);
+      border: 1px solid rgba(249,115,22,0.15);
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 1.5rem;
+      max-width: 520px;
+      width: 100%;
+    }
+    .info-box strong { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="tag">Task 3 — Internship Project</div>
+  <h1>Frontend <span>Data Validation</span></h1>
+  <p>by Abdul Karim Khan</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('register', this)">Register Form</button>
+  <button class="tab-btn" onclick="switchTab('login', this)">Login Form</button>
+  <button class="tab-btn" onclick="switchTab('contact', this)">Contact Form</button>
+</div>
+
+
+<div class="form-card" id="tab-register">
+  <div id="register-form-wrap">
+    <div class="form-title">Create Account</div>
+    <div class="form-subtitle">All fields are validated before submission</div>
+
+   
+    <div class="form-group">
+      <label>Full Name</label>
+      <div class="input-wrap">
+        <input type="text" id="reg-name" placeholder="Abdul Karim Khan" oninput="validateName('reg-name','reg-name-err','reg-name-ok')"/>
+        <span class="input-icon" id="reg-name-icon"></span>
+      </div>
+      <div class="error-msg" id="reg-name-err">⚠ Name must be at least 3 characters</div>
+      <div class="success-msg" id="reg-name-ok">✓ Looks good!</div>
+    </div>
+
+    
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <input type="text" id="reg-email" placeholder="abdul@email.com" oninput="validateEmail('reg-email','reg-email-err','reg-email-ok')"/>
+        <span class="input-icon" id="reg-email-icon"></span>
+      </div>
+      <div class="error-msg" id="reg-email-err">⚠ Please enter a valid email address</div>
+      <div class="success-msg" id="reg-email-ok">✓ Valid email!</div>
+    </div>
+
+    
+    <div class="form-group">
+      <label>Phone Number</label>
+      <div class="input-wrap">
+        <input type="text" id="reg-phone" placeholder="03001234567" oninput="validatePhone('reg-phone','reg-phone-err','reg-phone-ok')"/>
+        <span class="input-icon" id="reg-phone-icon"></span>
+      </div>
+      <div class="error-msg" id="reg-phone-err">⚠ Enter a valid 10-11 digit phone number</div>
+      <div class="success-msg" id="reg-phone-ok">✓ Valid number!</div>
+    </div>
+
+    
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="reg-pw" placeholder="Min 8 chars, number & symbol" oninput="validatePassword()"/>
+        <button class="toggle-pw" type="button" onclick="togglePw('reg-pw', this)">👁</button>
+      </div>
+      <div class="strength-bar show" id="strength-bar">
+        <div class="strength-track"><div class="strength-fill" id="strength-fill"></div></div>
+        <div class="strength-label" id="strength-label">Enter a password</div>
+      </div>
+      <div class="req-list show" id="req-list">
+        <div class="req-item" id="req-len"><div class="req-dot"></div>At least 8 characters</div>
+        <div class="req-item" id="req-upper"><div class="req-dot"></div>One uppercase letter (A-Z)</div>
+        <div class="req-item" id="req-num"><div class="req-dot"></div>One number (0-9)</div>
+        <div class="req-item" id="req-sym"><div class="req-dot"></div>One symbol (!@#$...)</div>
+      </div>
+    </div>
+
+   
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <div class="input-wrap">
+        <input type="password" id="reg-pw2" placeholder="Repeat your password" oninput="validateConfirm()"/>
+        <span class="input-icon" id="reg-pw2-icon"></span>
+      </div>
+      <div class="error-msg" id="reg-pw2-err">⚠ Passwords do not match</div>
+      <div class="success-msg" id="reg-pw2-ok">✓ Passwords match!</div>
+    </div>
+
+    <button class="submit-btn" onclick="submitRegister()">Create Account →</button>
+  </div>
+
+  <div class="success-screen" id="register-success">
+    <div class="success-icon">✅</div>
+    <h2>Account Created!</h2>
+    <p>All validations passed successfully.<br/>Your data is clean and ready for the backend.</p>
+    <button class="reset-btn" onclick="resetForm('register')">Try Again</button>
+  </div>
+</div>
+
+
+<div class="form-card" id="tab-login" style="display:none">
+  <div id="login-form-wrap">
+    <div class="form-title">Welcome Back</div>
+    <div class="form-subtitle">Login with validated credentials</div>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <input type="text" id="login-email" placeholder="your@email.com" oninput="validateEmail('login-email','login-email-err','login-email-ok')"/>
+        <span class="input-icon" id="login-email-icon"></span>
+      </div>
+      <div class="error-msg" id="login-email-err">⚠ Please enter a valid email</div>
+      <div class="success-msg" id="login-email-ok">✓ Valid email!</div>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <input type="password" id="login-pw" placeholder="Your password" oninput="validateSimplePw()"/>
+        <button class="toggle-pw" type="button" onclick="togglePw('login-pw', this)">👁</button>
+      </div>
+      <div class="error-msg" id="login-pw-err">⚠ Password must be at least 6 characters</div>
+      <div class="success-msg" id="login-pw-ok">✓ Looks good!</div>
+    </div>
+
+    <button class="submit-btn" onclick="submitLogin()">Login →</button>
+  </div>
+  <div class="success-screen" id="login-success">
+    <div class="success-icon">🔓</div>
+    <h2>Login Successful!</h2>
+    <p>Credentials validated successfully.</p>
+    <button class="reset-btn" onclick="resetForm('login')">Try Again</button>
+  </div>
+</div>
+
+
+<div class="form-card" id="tab-contact" style="display:none">
+  <div id="contact-form-wrap">
+    <div class="form-title">Send a Message</div>
+    <div class="form-subtitle">Contact form with full validation</div>
+
+    <div class="form-group">
+      <label>Your Name</label>
+      <div class="input-wrap">
+        <input type="text" id="con-name" placeholder="Your full name" oninput="validateName('con-name','con-name-err','con-name-ok')"/>
+        <span class="input-icon" id="con-name-icon"></span>
+      </div>
+      <div class="error-msg" id="con-name-err">⚠ Name must be at least 3 characters</div>
+      <div class="success-msg" id="con-name-ok">✓ Looks good!</div>
+    </div>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <input type="text" id="con-email" placeholder="your@email.com" oninput="validateEmail('con-email','con-email-err','con-email-ok')"/>
+        <span class="input-icon" id="con-email-icon"></span>
+      </div>
+      <div class="error-msg" id="con-email-err">⚠ Please enter a valid email</div>
+      <div class="success-msg" id="con-email-ok">✓ Valid email!</div>
+    </div>
+
+    <div class="form-group">
+      <label>Subject</label>
+      <div class="input-wrap">
+        <input type="text" id="con-subject" placeholder="What is this about?" oninput="validateSubject()"/>
+        <span class="input-icon" id="con-subject-icon"></span>
+      </div>
+      <div class="error-msg" id="con-subject-err">⚠ Subject must be at least 5 characters</div>
+      <div class="success-msg" id="con-subject-ok">✓ Good subject!</div>
+    </div>
+
+    <div class="form-group">
+      <label>Message</label>
+      <div class="input-wrap">
+        <input type="text" id="con-msg" placeholder="Your message (min 20 chars)" oninput="validateMsg()"/>
+        <span class="input-icon" id="con-msg-icon"></span>
+      </div>
+      <div class="error-msg" id="con-msg-err">⚠ Message must be at least 20 characters</div>
+      <div class="success-msg" id="con-msg-ok">✓ Message looks good!</div>
+    </div>
+
+    <button class="submit-btn" onclick="submitContact()">Send Message →</button>
+  </div>
+  <div class="success-screen" id="contact-success">
+    <div class="success-icon">📨</div>
+    <h2>Message Sent!</h2>
+    <p>All fields validated. Message ready to send.</p>
+    <button class="reset-btn" onclick="resetForm('contact')">Send Another</button>
+  </div>
+</div>
+
+<div class="info-box">
+  <strong>What this project demonstrates:</strong><br/>
+  ✓ Real-time input validation using JavaScript &nbsp;|&nbsp;
+  ✓ Email format checking with Regex &nbsp;|&nbsp;
+  ✓ Password strength meter &nbsp;|&nbsp;
+  ✓ Confirm password matching &nbsp;|&nbsp;
+  ✓ Phone number validation &nbsp;|&nbsp;
+  ✓ Visual feedback (green/red borders + messages)
+</div>
+
+<script>
+  function switchTab(name, btn) {
+    ['register','login','contact'].forEach(t => {
+      document.getElementById('tab-'+t).style.display = 'none';
+    });
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+name).style.display = 'block';
+    btn.classList.add('active');
+  }
+
+  function setValid(inputId, errId, okId, iconId) {
+    const el = document.getElementById(inputId);
+    el.className = 'valid';
+    if (errId) document.getElementById(errId).classList.remove('show');
+    if (okId) document.getElementById(okId).classList.add('show');
+    if (iconId) document.getElementById(iconId).textContent = '✅';
+  }
+  function setInvalid(inputId, errId, okId, iconId) {
+    const el = document.getElementById(inputId);
+    el.className = 'invalid';
+    if (errId) document.getElementById(errId).classList.add('show');
+    if (okId) document.getElementById(okId).classList.remove('show');
+    if (iconId) document.getElementById(iconId).textContent = '❌';
+  }
+  function clearState(inputId, errId, okId, iconId) {
+    document.getElementById(inputId).className = '';
+    if (errId) document.getElementById(errId).classList.remove('show');
+    if (okId) document.getElementById(okId).classList.remove('show');
+    if (iconId) document.getElementById(iconId).textContent = '';
+  }
+
+  function validateName(id, err, ok) {
+    const val = document.getElementById(id).value.trim();
+    const icon = id + '-icon';
+    if (val.length === 0) { clearState(id, err, ok, icon); return false; }
+    if (val.length >= 3) { setValid(id, err, ok, icon); return true; }
+    else { setInvalid(id, err, ok, icon); return false; }
+  }
+
+  function validateEmail(id, err, ok) {
+    const val = document.getElementById(id).value.trim();
+    const icon = id + '-icon';
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (val.length === 0) { clearState(id, err, ok, icon); return false; }
+    if (regex.test(val)) { setValid(id, err, ok, icon); return true; }
+    else { setInvalid(id, err, ok, icon); return false; }
+  }
+  function validatePhone(id, err, ok) {
+    const val = document.getElementById(id).value.trim();
+    const icon = id + '-icon';
+    const regex = /^[0-9]{10,11}$/;
+    if (val.length === 0) { clearState(id, err, ok, icon); return false; }
+    if (regex.test(val)) { setValid(id, err, ok, icon); return true; }
+    else { setInvalid(id, err, ok, icon); return false; }
+  }
+  function validatePassword() {
+    const pw = document.getElementById('reg-pw').value;
+    const fill = document.getElementById('strength-fill');
+    const label = document.getElementById('strength-label');
+    const hasLen   = pw.length >= 8;
+    const hasUpper = /[A-Z]/.test(pw);
+    const hasNum   = /[0-9]/.test(pw);
+    const hasSym   = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
+    document.getElementById('req-len').className   = 'req-item' + (hasLen ? ' met' : '');
+    document.getElementById('req-upper').className = 'req-item' + (hasUpper ? ' met' : '');
+    document.getElementById('req-num').className   = 'req-item' + (hasNum ? ' met' : '');
+    document.getElementById('req-sym').className   = 'req-item' + (hasSym ? ' met' : '');
+    const score = [hasLen, hasUpper, hasNum, hasSym].filter(Boolean).length;
+    const levels = [
+      { w: '0%',   color: 'transparent', text: 'Enter a password' },
+      { w: '25%',  color: '#ef4444',     text: 'Weak' },
+      { w: '50%',  color: '#f97316',     text: 'Fair' },
+      { w: '75%',  color: '#eab308',     text: 'Good' },
+      { w: '100%', color: '#22c55e',     text: 'Strong 💪' },
+    ];
+    const lvl = pw.length === 0 ? levels[0] : levels[score];
+    fill.style.width = lvl.w;
+    fill.style.background = lvl.color;
+    label.textContent = lvl.text;
+    label.style.color = lvl.color === 'transparent' ? 'var(--muted)' : lvl.color;
+    validateConfirm();
+    return score === 4;
+  }
+  function validateConfirm() {
+    const pw = document.getElementById('reg-pw').value;
+    const pw2 = document.getElementById('reg-pw2').value;
+    if (pw2.length === 0) { clearState('reg-pw2','reg-pw2-err','reg-pw2-ok','reg-pw2-icon'); return false; }
+    if (pw === pw2) { setValid('reg-pw2','reg-pw2-err','reg-pw2-ok','reg-pw2-icon'); return true; }
+    else { setInvalid('reg-pw2','reg-pw2-err','reg-pw2-ok','reg-pw2-icon'); return false; }
+  }
+
+
+  function validateSimplePw() {
+    const val = document.getElementById('login-pw').value;
+    if (val.length === 0) { clearState('login-pw','login-pw-err','login-pw-ok',null); return false; }
+    if (val.length >= 6) { setValid('login-pw','login-pw-err','login-pw-ok',null); return true; }
+    else { setInvalid('login-pw','login-pw-err','login-pw-ok',null); return false; }
+  }
+
+
+  function validateSubject() {
+    const val = document.getElementById('con-subject').value.trim();
+    if (val.length === 0) { clearState('con-subject','con-subject-err','con-subject-ok','con-subject-icon'); return false; }
+    if (val.length >= 5) { setValid('con-subject','con-subject-err','con-subject-ok','con-subject-icon'); return true; }
+    else { setInvalid('con-subject','con-subject-err','con-subject-ok','con-subject-icon'); return false; }
+  }
+
+
+  function validateMsg() {
+    const val = document.getElementById('con-msg').value.trim();
+    if (val.length === 0) { clearState('con-msg','con-msg-err','con-msg-ok','con-msg-icon'); return false; }
+    if (val.length >= 20) { setValid('con-msg','con-msg-err','con-msg-ok','con-msg-icon'); return true; }
+    else { setInvalid('con-msg','con-msg-err','con-msg-ok','con-msg-icon'); return false; }
+  }
+
+
+  function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+    else { input.type = 'password'; btn.textContent = '👁'; }
+  }
+
+
+  function submitRegister() {
+    const n = validateName('reg-name','reg-name-err','reg-name-ok');
+    const e = validateEmail('reg-email','reg-email-err','reg-email-ok');
+    const p = validatePhone('reg-phone','reg-phone-err','reg-phone-ok');
+    const pw = validatePassword();
+    const pw2 = validateConfirm();
+    if (n && e && p && pw && pw2) {
+      document.getElementById('register-form-wrap').style.display = 'none';
+      document.getElementById('register-success').style.display = 'flex';
+    } else {
+      if (!n) setInvalid('reg-name','reg-name-err','reg-name-ok','reg-name-icon');
+      if (!e) setInvalid('reg-email','reg-email-err','reg-email-ok','reg-email-icon');
+      if (!p) setInvalid('reg-phone','reg-phone-err','reg-phone-ok','reg-phone-icon');
+      if (!pw2) setInvalid('reg-pw2','reg-pw2-err','reg-pw2-ok','reg-pw2-icon');
+    }
+  }
+
+  function submitLogin() {
+    const e = validateEmail('login-email','login-email-err','login-email-ok');
+    const p = validateSimplePw();
+    if (e && p) {
+      document.getElementById('login-form-wrap').style.display = 'none';
+      document.getElementById('login-success').style.display = 'flex';
+    } else {
+      if (!e) setInvalid('login-email','login-email-err','login-email-ok','login-email-icon');
+      if (!p) setInvalid('login-pw','login-pw-err','login-pw-ok',null);
+    }
+  }
+
+  function submitContact() {
+    const n = validateName('con-name','con-name-err','con-name-ok');
+    const e = validateEmail('con-email','con-email-err','con-email-ok');
+    const s = validateSubject();
+    const m = validateMsg();
+    if (n && e && s && m) {
+      document.getElementById('contact-form-wrap').style.display = 'none';
+      document.getElementById('contact-success').style.display = 'flex';
+    } else {
+      if (!n) setInvalid('con-name','con-name-err','con-name-ok','con-name-icon');
+      if (!e) setInvalid('con-email','con-email-err','con-email-ok','con-email-icon');
+      if (!s) setInvalid('con-subject','con-subject-err','con-subject-ok','con-subject-icon');
+      if (!m) setInvalid('con-msg','con-msg-err','con-msg-ok','con-msg-icon');
+    }
+  }
+
+
+  function resetForm(form) {
+    location.reload();
+  }
+</script>
+</body>
+</html>
